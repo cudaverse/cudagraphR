@@ -1,0 +1,27 @@
+Package: cudagraphR
+Title: GPU-Aware Graph Workflows for R
+Version: 0.1.0
+Authors@R:
+    person("Yaoxiang", "Li", email = "liyaoxiang@outlook.com",
+           role = c("aut", "cre"))
+Description: Provides sparse graph construction and community-detection
+    workflows for GPU-aware numerical results in R. Converts nearest-neighbour
+    results into compact graph objects and supplies Louvain and Leiden
+    clustering through an optional igraph backend.
+License: MIT + file LICENSE
+URL: https://github.com/cudaverse/cudagraphR
+BugReports: https://github.com/cudaverse/cudagraphR/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    Matrix,
+    methods,
+    stats
+Suggests:
+    cudalearnr,
+    igraph (>= 2.0.0),
+    testthat (>= 3.0.0)
+Remotes:
+    cudaverse/cudalearnr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
