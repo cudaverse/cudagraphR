@@ -22,7 +22,7 @@ cuda_knn_graph(
 - neighbors:
 
   A
-  [`cudalearnr::cuda_knn()`](https://rdrr.io/pkg/cudalearnr/man/cuda_knn.html)
+  [`cudalearnr::cuda_knn()`](https://cudaverse.github.io/cudalearnr/reference/cuda_knn.html)
   result or compatible list.
 
 - weighting:
@@ -41,7 +41,8 @@ cuda_knn_graph(
 
 A `cuda_graph` list containing sparse `adjacency`, counts of `vertices`
 and undirected `edges`, `weighting`, `symmetrize`, `source_device`, and
-the graph-assembly `backend`.
+the graph-assembly `backend`. Named kNN observations are retained as
+adjacency dimnames and in `vertex_names`.
 
 ## Examples
 

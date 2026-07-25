@@ -11,10 +11,10 @@ community-detection interface for omics workflows.
 - sparse symmetric `Matrix` adjacency;
 - Louvain and Leiden clustering through `igraph`;
 - direct composition with
-  [`cudalearnr::cuda_knn()`](https://rdrr.io/pkg/cudalearnr/man/cuda_knn.html).
+  [`cudalearnr::cuda_knn()`](https://cudaverse.github.io/cudalearnr/reference/cuda_knn.html).
 
 Distance and neighbour computation may run on CUDA upstream. In version
-0.1.1, graph assembly and community detection run on the CPU; the
+0.1.2, graph assembly and community detection run on the CPU; the
 returned objects record both the source device and graph backend.
 
 ## Installation
@@ -62,6 +62,11 @@ is installed, cluster the same graph:
 communities <- cuda_leiden(graph)
 communities$membership
 ```
+
+When the kNN input has observation row names, those identifiers are
+preserved as graph adjacency dimnames and as names on community
+memberships. This keeps clusters aligned with the original rows even
+after results are reordered or joined with metadata.
 
 See the cudaverse [end-to-end
 workflow](https://github.com/cudaverse/.github/blob/main/WORKFLOW.md)

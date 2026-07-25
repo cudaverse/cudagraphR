@@ -22,7 +22,8 @@ cuda_louvain(graph, resolution = 1)
 
 A `cuda_communities` list containing integer `membership`, the number of
 `communities`, `modularity`, `algorithm`, `resolution`, `source_device`,
-and clustering `backend`.
+and clustering `backend`. Membership is named when the graph has vertex
+identifiers.
 
 ## Examples
 

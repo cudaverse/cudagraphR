@@ -15,7 +15,7 @@ have different weights, the undirected edge retains the stronger affinity."></he
 
     <a class="navbar-brand me-2" href="../index.html">cudagraphR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,7 @@ have different weights, the undirected edge retains the stronger affinity.</p>
 
 
 <dl><dt id="arg-neighbors">neighbors<a class="anchor" aria-label="anchor" href="#arg-neighbors"></a></dt>
-<dd><p>A <code><a href="https://rdrr.io/pkg/cudalearnr/man/cuda_knn.html" class="external-link">cudalearnr::cuda_knn()</a></code> result or compatible list.</p></dd>
+<dd><p>A <code><a href="https://cudaverse.github.io/cudalearnr/reference/cuda_knn.html" class="external-link">cudalearnr::cuda_knn()</a></code> result or compatible list.</p></dd>
 
 
 <dt id="arg-weighting">weighting<a class="anchor" aria-label="anchor" href="#arg-weighting"></a></dt>
@@ -83,7 +83,8 @@ have different weights, the undirected edge retains the stronger affinity.</p>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>cuda_graph</code> list containing sparse <code>adjacency</code>, counts of
 <code>vertices</code> and undirected <code>edges</code>, <code>weighting</code>, <code>symmetrize</code>,
-<code>source_device</code>, and the graph-assembly <code>backend</code>.</p>
+<code>source_device</code>, and the graph-assembly <code>backend</code>. Named kNN observations
+are retained as adjacency dimnames and in <code>vertex_names</code>.</p>
     </div>
 
     <div class="section level2">
