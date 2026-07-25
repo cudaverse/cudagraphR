@@ -12,8 +12,18 @@ cuda_louvain(graph, resolution = 1)
 \item{resolution}{Positive modularity resolution.}
 }
 \value{
-A \code{cuda_communities} object.
+A \code{cuda_communities} list containing integer \code{membership},
+the number of \code{communities}, \code{modularity}, \code{algorithm}, \code{resolution},
+\code{source_device}, and clustering \code{backend}.
 }
 \description{
 Community detection currently runs on the CPU through \code{igraph}.
+}
+\examples{
+index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)
+distance <- matrix(c(1, 2, 1, 1, 2, 1), 3, byrow = TRUE)
+graph <- cuda_knn_graph(list(index = index, distance = distance))
+if (requireNamespace("igraph", quietly = TRUE)) {
+  cuda_louvain(graph)
+}
 }

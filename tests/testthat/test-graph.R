@@ -110,7 +110,8 @@ test_that("cudalearnr results compose when available", {
   neighbors <- cudalearnr::cuda_knn(
     matrix(rnorm(36), 12, 3),
     k = 3,
-    device = "cpu"
+    device = "cpu",
+    batch_size = 2
   )
   graph <- cuda_knn_graph(neighbors)
   expect_identical(graph$vertices, 12L)

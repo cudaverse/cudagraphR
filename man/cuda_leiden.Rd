@@ -14,8 +14,17 @@ cuda_leiden(graph, resolution = 1, n_iterations = 2L)
 \item{n_iterations}{Number of Leiden refinement iterations.}
 }
 \value{
-A \code{cuda_communities} object.
+A \code{cuda_communities} list with the stable fields documented by
+\code{\link[=cuda_louvain]{cuda_louvain()}}.
 }
 \description{
 Community detection currently runs on the CPU through \code{igraph}.
+}
+\examples{
+index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)
+distance <- matrix(c(1, 2, 1, 1, 2, 1), 3, byrow = TRUE)
+graph <- cuda_knn_graph(list(index = index, distance = distance))
+if (requireNamespace("igraph", quietly = TRUE)) {
+  cuda_leiden(graph)
+}
 }

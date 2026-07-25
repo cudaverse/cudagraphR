@@ -21,7 +21,9 @@ cuda_knn_graph(
 \item{sigma}{Gaussian bandwidth. Defaults to the median positive distance.}
 }
 \value{
-A \code{cuda_graph} object.
+A \code{cuda_graph} list containing sparse \code{adjacency}, counts of
+\code{vertices} and undirected \code{edges}, \code{weighting}, \code{symmetrize},
+\code{source_device}, and the graph-assembly \code{backend}.
 }
 \description{
 The input may have been computed on CUDA, but graph assembly itself is

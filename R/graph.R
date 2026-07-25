@@ -90,7 +90,9 @@
 #' @param weighting Edge weighting: binary, inverse-distance, or Gaussian.
 #' @param symmetrize Keep the union or only mutual nearest-neighbour edges.
 #' @param sigma Gaussian bandwidth. Defaults to the median positive distance.
-#' @return A `cuda_graph` object.
+#' @return A `cuda_graph` list containing sparse `adjacency`, counts of
+#'   `vertices` and undirected `edges`, `weighting`, `symmetrize`,
+#'   `source_device`, and the graph-assembly `backend`.
 #' @export
 #' @examples
 #' index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)
@@ -165,6 +167,11 @@ cuda_knn_graph <- function(neighbors,
 #' @param graph A `cuda_graph`.
 #' @return A symmetric sparse `Matrix::dgCMatrix`.
 #' @export
+#' @examples
+#' index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)
+#' distance <- matrix(c(1, 2, 1, 1, 2, 1), 3, byrow = TRUE)
+#' graph <- cuda_knn_graph(list(index = index, distance = distance))
+#' as_adjacency_matrix(graph)
 as_adjacency_matrix <- function(graph) {
   if (!inherits(graph, "cuda_graph")) {
     stop("`graph` must be a cuda_graph object.", call. = FALSE)
@@ -223,8 +230,17 @@ as_adjacency_matrix <- function(graph) {
 #'
 #' @param graph A `cuda_graph`.
 #' @param resolution Positive modularity resolution.
-#' @return A `cuda_communities` object.
+#' @return A `cuda_communities` list containing integer `membership`,
+#'   the number of `communities`, `modularity`, `algorithm`, `resolution`,
+#'   `source_device`, and clustering `backend`.
 #' @export
+#' @examples
+#' index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)
+#' distance <- matrix(c(1, 2, 1, 1, 2, 1), 3, byrow = TRUE)
+#' graph <- cuda_knn_graph(list(index = index, distance = distance))
+#' if (requireNamespace("igraph", quietly = TRUE)) {
+#'   cuda_louvain(graph)
+#' }
 cuda_louvain <- function(graph, resolution = 1) {
   resolution <- .graph_resolution(resolution)
   igraph_graph <- .as_igraph(graph)
@@ -243,8 +259,16 @@ cuda_louvain <- function(graph, resolution = 1) {
 #' @param graph A `cuda_graph`.
 #' @param resolution Positive modularity resolution.
 #' @param n_iterations Number of Leiden refinement iterations.
-#' @return A `cuda_communities` object.
+#' @return A `cuda_communities` list with the stable fields documented by
+#'   [cuda_louvain()].
 #' @export
+#' @examples
+#' index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)
+#' distance <- matrix(c(1, 2, 1, 1, 2, 1), 3, byrow = TRUE)
+#' graph <- cuda_knn_graph(list(index = index, distance = distance))
+#' if (requireNamespace("igraph", quietly = TRUE)) {
+#'   cuda_leiden(graph)
+#' }
 cuda_leiden <- function(graph, resolution = 1, n_iterations = 2L) {
   resolution <- .graph_resolution(resolution)
   if (!is.numeric(n_iterations) || length(n_iterations) != 1L ||
