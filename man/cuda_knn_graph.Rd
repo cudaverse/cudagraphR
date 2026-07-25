@@ -26,6 +26,9 @@ A \code{cuda_graph} object.
 \description{
 The input may have been computed on CUDA, but graph assembly itself is
 currently performed on the CPU with a sparse \code{Matrix}.
+Union graphs retain an edge observed in either direction, whereas mutual
+graphs require both directed neighbour relations. When the two directions
+have different weights, the undirected edge retains the stronger affinity.
 }
 \examples{
 index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)

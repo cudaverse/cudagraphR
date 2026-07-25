@@ -37,6 +37,18 @@
   if (any(index == row_index)) {
     stop("Neighbour indices cannot contain self-links.", call. = FALSE)
   }
+  duplicate_rows <- vapply(
+    seq_len(nrow(index)),
+    function(row) anyDuplicated(index[row, ]) > 0L,
+    logical(1)
+  )
+  if (any(duplicate_rows)) {
+    stop(
+      "Neighbour indices must be unique within each observation; ",
+      "duplicate neighbours are not allowed.",
+      call. = FALSE
+    )
+  }
   list(
     index = matrix(as.integer(index), nrow = nrow(index)),
     distance = distance,
@@ -70,6 +82,9 @@
 #'
 #' The input may have been computed on CUDA, but graph assembly itself is
 #' currently performed on the CPU with a sparse `Matrix`.
+#' Union graphs retain an edge observed in either direction, whereas mutual
+#' graphs require both directed neighbour relations. When the two directions
+#' have different weights, the undirected edge retains the stronger affinity.
 #'
 #' @param neighbors A `cudalearnr::cuda_knn()` result or compatible list.
 #' @param weighting Edge weighting: binary, inverse-distance, or Gaussian.
@@ -101,7 +116,14 @@ cuda_knn_graph <- function(neighbors,
   split_weight <- split(weight, key)
   split_position <- split(seq_along(key), key)
   keep <- if (symmetrize == "mutual") {
-    lengths(split_position) > 1L
+    vapply(
+      split_position,
+      function(position) {
+        forward <- from[position] == low[position]
+        any(forward) && any(!forward)
+      },
+      logical(1)
+    )
   } else {
     rep(TRUE, length(split_position))
   }

@@ -32,6 +32,78 @@ test_that("mutual graph keeps reciprocal neighbours", {
   expect_equal(as.matrix(graph$adjacency), t(as.matrix(graph$adjacency)))
 })
 
+test_that("mutual graph requires both neighbour directions", {
+  neighbors <- list(
+    index = matrix(
+      c(
+        2, 3,
+        1, 3,
+        4, 1,
+        3, 2
+      ),
+      nrow = 4,
+      byrow = TRUE
+    ),
+    distance = matrix(
+      c(
+        1, 4,
+        3, 2,
+        2, 1,
+        0.5, 5
+      ),
+      nrow = 4,
+      byrow = TRUE
+    )
+  )
+
+  graph <- cuda_knn_graph(
+    neighbors,
+    weighting = "distance",
+    symmetrize = "mutual"
+  )
+  adjacency <- as.matrix(as_adjacency_matrix(graph))
+
+  expect_identical(graph$edges, 3L)
+  expect_gt(adjacency[1, 2], 0)
+  expect_gt(adjacency[1, 3], 0)
+  expect_gt(adjacency[3, 4], 0)
+  expect_equal(adjacency[2, 3], 0)
+  expect_equal(adjacency[2, 4], 0)
+})
+
+test_that("asymmetric reciprocal weights retain the stronger affinity", {
+  neighbors <- list(
+    index = matrix(c(2, 3, 1, 3, 4, 1, 3, 2), 4, byrow = TRUE),
+    distance = matrix(c(1, 4, 3, 2, 2, 1, 0.5, 5), 4, byrow = TRUE)
+  )
+
+  graph <- cuda_knn_graph(
+    neighbors,
+    weighting = "distance",
+    symmetrize = "mutual"
+  )
+  adjacency <- as.matrix(as_adjacency_matrix(graph))
+
+  expect_equal(adjacency[1, 2], 1 / (1 + 1))
+  expect_equal(adjacency[1, 3], 1 / (1 + 1))
+  expect_equal(adjacency[3, 4], 1 / (1 + 0.5))
+  expect_equal(adjacency, t(adjacency))
+})
+
+test_that("duplicate neighbours are rejected before symmetrization", {
+  neighbors <- example_knn()
+  neighbors$index[1, 2] <- neighbors$index[1, 1]
+
+  expect_error(
+    cuda_knn_graph(neighbors, symmetrize = "union"),
+    "duplicate neighbours"
+  )
+  expect_error(
+    cuda_knn_graph(neighbors, symmetrize = "mutual"),
+    "duplicate neighbours"
+  )
+})
+
 test_that("cudalearnr results compose when available", {
   skip_if_not_installed("cudalearnr")
   set.seed(1)
