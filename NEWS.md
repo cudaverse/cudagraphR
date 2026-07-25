@@ -1,3 +1,8 @@
+# cudagraphR 0.1.2
+
+- Named kNN observations now become graph vertex names, sparse adjacency
+  dimnames, and community-membership names.
+
 # cudagraphR 0.1.1
 
 - Documented and tested composition with the bounded-memory batched

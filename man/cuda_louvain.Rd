@@ -14,7 +14,8 @@ cuda_louvain(graph, resolution = 1)
 \value{
 A \code{cuda_communities} list containing integer \code{membership},
 the number of \code{communities}, \code{modularity}, \code{algorithm}, \code{resolution},
-\code{source_device}, and clustering \code{backend}.
+\code{source_device}, and clustering \code{backend}. Membership is named when the
+graph has vertex identifiers.
 }
 \description{
 Community detection currently runs on the CPU through \code{igraph}.

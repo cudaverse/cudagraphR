@@ -23,7 +23,8 @@ cuda_knn_graph(
 \value{
 A \code{cuda_graph} list containing sparse \code{adjacency}, counts of
 \code{vertices} and undirected \code{edges}, \code{weighting}, \code{symmetrize},
-\code{source_device}, and the graph-assembly \code{backend}.
+\code{source_device}, and the graph-assembly \code{backend}. Named kNN observations
+are retained as adjacency dimnames and in \code{vertex_names}.
 }
 \description{
 The input may have been computed on CUDA, but graph assembly itself is

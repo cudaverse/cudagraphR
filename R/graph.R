@@ -49,10 +49,25 @@
       call. = FALSE
     )
   }
+  index_names <- rownames(index)
+  distance_names <- rownames(distance)
+  if (!is.null(index_names) && !is.null(distance_names) &&
+      !identical(index_names, distance_names)) {
+    stop(
+      "Neighbour index and distance row names must identify the same vertices.",
+      call. = FALSE
+    )
+  }
+  vertex_names <- index_names %||% distance_names
   list(
-    index = matrix(as.integer(index), nrow = nrow(index)),
+    index = matrix(
+      as.integer(index),
+      nrow = nrow(index),
+      dimnames = dimnames(index)
+    ),
     distance = distance,
-    device = source_device
+    device = source_device,
+    vertex_names = vertex_names
   )
 }
 
@@ -92,7 +107,8 @@
 #' @param sigma Gaussian bandwidth. Defaults to the median positive distance.
 #' @return A `cuda_graph` list containing sparse `adjacency`, counts of
 #'   `vertices` and undirected `edges`, `weighting`, `symmetrize`,
-#'   `source_device`, and the graph-assembly `backend`.
+#'   `source_device`, and the graph-assembly `backend`. Named kNN observations
+#'   are retained as adjacency dimnames and in `vertex_names`.
 #' @export
 #' @examples
 #' index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)
@@ -148,6 +164,12 @@ cuda_knn_graph <- function(neighbors,
     )
   }
   adjacency <- methods::as(adjacency, "dgCMatrix")
+  if (!is.null(neighbors$vertex_names)) {
+    dimnames(adjacency) <- list(
+      neighbors$vertex_names,
+      neighbors$vertex_names
+    )
+  }
   structure(
     list(
       adjacency = adjacency,
@@ -156,7 +178,8 @@ cuda_knn_graph <- function(neighbors,
       weighting = weighting,
       symmetrize = symmetrize,
       source_device = neighbors$device,
-      backend = "Matrix"
+      backend = "Matrix",
+      vertex_names = neighbors$vertex_names
     ),
     class = "cuda_graph"
   )
@@ -205,6 +228,9 @@ as_adjacency_matrix <- function(graph) {
 
 .community_result <- function(fit, graph, igraph_graph, algorithm, resolution) {
   membership <- as.integer(igraph::membership(fit))
+  if (!is.null(graph$vertex_names)) {
+    names(membership) <- graph$vertex_names
+  }
   structure(
     list(
       membership = membership,
@@ -232,7 +258,8 @@ as_adjacency_matrix <- function(graph) {
 #' @param resolution Positive modularity resolution.
 #' @return A `cuda_communities` list containing integer `membership`,
 #'   the number of `communities`, `modularity`, `algorithm`, `resolution`,
-#'   `source_device`, and clustering `backend`.
+#'   `source_device`, and clustering `backend`. Membership is named when the
+#'   graph has vertex identifiers.
 #' @export
 #' @examples
 #' index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)

@@ -1,6 +1,6 @@
 Package: cudagraphR
 Title: GPU-Aware Graph Workflows for R
-Version: 0.1.1
+Version: 0.1.2
 Authors@R:
     person("Yaoxiang", "Li", email = "liyaoxiang@outlook.com",
            role = c("aut", "cre"))
@@ -19,7 +19,7 @@ Imports:
     methods,
     stats
 Suggests:
-    cudalearnr (>= 0.1.1),
+    cudalearnr (>= 0.1.2),
     igraph (>= 2.0.0),
     testthat (>= 3.0.0)
 Remotes:

@@ -117,6 +117,37 @@ test_that("cudalearnr results compose when available", {
   expect_identical(graph$vertices, 12L)
 })
 
+test_that("vertex identifiers survive graph construction and clustering", {
+  neighbors <- example_knn()
+  vertex_names <- paste0("cell_", seq_len(nrow(neighbors$index)))
+  dimnames(neighbors$index) <- list(vertex_names, c("neighbor_1", "neighbor_2"))
+  dimnames(neighbors$distance) <- dimnames(neighbors$index)
+
+  graph <- cuda_knn_graph(neighbors)
+  expect_identical(graph$vertex_names, vertex_names)
+  expect_identical(
+    dimnames(as_adjacency_matrix(graph)),
+    list(vertex_names, vertex_names)
+  )
+
+  if (requireNamespace("igraph", quietly = TRUE)) {
+    set.seed(1)
+    communities <- cuda_louvain(graph)
+    expect_identical(names(communities$membership), vertex_names)
+  }
+})
+
+test_that("conflicting neighbour identifiers are rejected", {
+  neighbors <- example_knn()
+  rownames(neighbors$index) <- paste0("cell_", seq_len(4))
+  rownames(neighbors$distance) <- paste0("other_", seq_len(4))
+
+  expect_error(
+    cuda_knn_graph(neighbors),
+    "same vertices"
+  )
+})
+
 test_that("Louvain and Leiden return memberships", {
   skip_if_not_installed("igraph")
   graph <- cuda_knn_graph(example_knn())
