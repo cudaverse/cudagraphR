@@ -1,5 +1,8 @@
 # cudagraphR 0.2.0
 
+- `cuda_provenance()` now re-exports the canonical cudatensr S3 generic
+  instead of wrapping it, so methods registered by other cudaverse packages
+  remain available regardless of package attachment order.
 - Graph assembly and community detection now expose the shared stage-level
   provenance schema and explicitly report CPU computation independently from
   an upstream CUDA kNN source.

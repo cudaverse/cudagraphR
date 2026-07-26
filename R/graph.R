@@ -40,17 +40,9 @@
   cudatensr::cuda_provenance(x)
 }
 
-#' Inspect actual compute provenance
-#'
-#' This is the shared [cudatensr::cuda_provenance()] inspector, re-exposed for
-#' graph results.
-#'
-#' @param x A cudaverse result or named list of compute stages.
-#' @return A `cuda_provenance` data frame.
+#' @importFrom cudatensr cuda_provenance
 #' @export
-cuda_provenance <- function(x) {
-  cudatensr::cuda_provenance(x)
-}
+cudatensr::cuda_provenance
 
 .graph_knn <- function(neighbors) {
   source_class <- class(neighbors)[[1L]]

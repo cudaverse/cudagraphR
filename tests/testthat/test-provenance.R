@@ -16,6 +16,11 @@
   )
 }
 
+test_that("provenance inspection re-exports the canonical generic", {
+  expect_identical(cuda_provenance, cudatensr::cuda_provenance)
+  expect_true(utils::isS3stdGeneric(cuda_provenance))
+})
+
 test_that("graph assembly reports its CPU backend separately from its source", {
   graph <- cuda_knn_graph(
     .graph_test_neighbors("cuda"),
