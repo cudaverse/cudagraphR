@@ -1,4 +1,60 @@
+.graph_provenance_metadata <- function(stages) {
+  provenance <- cudatensr::cuda_provenance(stages)
+  list(
+    provenance_schema = attr(provenance, "schema", exact = TRUE),
+    compute_device = attr(provenance, "compute_device", exact = TRUE),
+    compute_stages = attr(provenance, "compute_stages", exact = TRUE)
+  )
+}
+
+.with_graph_provenance <- function(x, stages) {
+  metadata <- .graph_provenance_metadata(stages)
+  x$provenance_schema <- metadata$provenance_schema
+  x$compute_device <- metadata$compute_device
+  x$compute_stages <- metadata$compute_stages
+  x
+}
+
+.graph_cpu_stage <- function(backend) {
+  cudatensr::cuda_stage(
+    requested_device = "fixed-cpu",
+    device = "cpu",
+    backend = backend,
+    selection_reason = "algorithm_cpu_only",
+    fallback = FALSE,
+    output_device = "cpu"
+  )
+}
+
+.graph_has_compute_stages <- function(x) {
+  if (is.list(x) && "compute_stages" %in% names(x)) {
+    return(TRUE)
+  }
+  !is.null(attr(x, "compute_stages", exact = TRUE))
+}
+
+.graph_source_provenance <- function(x) {
+  if (!.graph_has_compute_stages(x)) {
+    return(NULL)
+  }
+  cudatensr::cuda_provenance(x)
+}
+
+#' Inspect actual compute provenance
+#'
+#' This is the shared [cudatensr::cuda_provenance()] inspector, re-exposed for
+#' graph results.
+#'
+#' @param x A cudaverse result or named list of compute stages.
+#' @return A `cuda_provenance` data frame.
+#' @export
+cuda_provenance <- function(x) {
+  cudatensr::cuda_provenance(x)
+}
+
 .graph_knn <- function(neighbors) {
+  source_class <- class(neighbors)[[1L]]
+  source_provenance <- .graph_source_provenance(neighbors)
   if (inherits(neighbors, "cuda_knn")) {
     index <- neighbors$index
     distance <- neighbors$distance
@@ -11,6 +67,14 @@
   } else {
     stop(
       "`neighbors` must be a cuda_knn object or a list with index and distance.",
+      call. = FALSE
+    )
+  }
+  if (!is.character(source_device) || length(source_device) != 1L ||
+      is.na(source_device) ||
+      !source_device %in% c("cpu", "cuda", "unknown")) {
+    stop(
+      "Neighbour `device` must be \"cpu\", \"cuda\", or \"unknown\".",
       call. = FALSE
     )
   }
@@ -67,7 +131,9 @@
     ),
     distance = distance,
     device = source_device,
-    vertex_names = vertex_names
+    vertex_names = vertex_names,
+    source_class = source_class,
+    source_provenance = source_provenance
   )
 }
 
@@ -77,10 +143,10 @@
 
 .graph_weights <- function(distance, weighting, sigma) {
   if (weighting == "binary") {
-    return(rep(1, length(distance)))
+    return(list(weight = rep(1, length(distance)), sigma = NULL))
   }
   if (weighting == "distance") {
-    return(1 / (1 + distance))
+    return(list(weight = 1 / (1 + distance), sigma = NULL))
   }
   if (is.null(sigma)) {
     positive <- distance[distance > 0]
@@ -90,7 +156,10 @@
       !is.finite(sigma) || sigma <= 0) {
     stop("`sigma` must be a positive finite number.", call. = FALSE)
   }
-  exp(-(distance^2) / (2 * sigma^2))
+  list(
+    weight = exp(-(distance^2) / (2 * sigma^2)),
+    sigma = sigma
+  )
 }
 
 #' Build a sparse graph from nearest neighbours
@@ -126,7 +195,9 @@ cuda_knn_graph <- function(neighbors,
   from <- rep(seq_len(n), each = k)
   to <- as.vector(t(neighbors$index))
   distance <- as.vector(t(neighbors$distance))
-  weight <- .graph_weights(distance, weighting, sigma)
+  weight_result <- .graph_weights(distance, weighting, sigma)
+  weight <- weight_result$weight
+  sigma <- weight_result$sigma
 
   low <- pmin(from, to)
   high <- pmax(from, to)
@@ -170,7 +241,7 @@ cuda_knn_graph <- function(neighbors,
       neighbors$vertex_names
     )
   }
-  structure(
+  output <- structure(
     list(
       adjacency = adjacency,
       vertices = n,
@@ -179,9 +250,20 @@ cuda_knn_graph <- function(neighbors,
       symmetrize = symmetrize,
       source_device = neighbors$device,
       backend = "Matrix",
-      vertex_names = neighbors$vertex_names
+      vertex_names = neighbors$vertex_names,
+      source_class = neighbors$source_class,
+      source_provenance = neighbors$source_provenance,
+      parameters = list(
+        weighting = weighting,
+        symmetrize = symmetrize,
+        sigma = sigma
+      )
     ),
     class = "cuda_graph"
+  )
+  .with_graph_provenance(
+    output,
+    list(graph_assembly = .graph_cpu_stage("Matrix"))
   )
 }
 
@@ -226,12 +308,13 @@ as_adjacency_matrix <- function(graph) {
   resolution
 }
 
-.community_result <- function(fit, graph, igraph_graph, algorithm, resolution) {
+.community_result <- function(fit, graph, igraph_graph, algorithm, resolution,
+                              parameters = list()) {
   membership <- as.integer(igraph::membership(fit))
   if (!is.null(graph$vertex_names)) {
     names(membership) <- graph$vertex_names
   }
-  structure(
+  output <- structure(
     list(
       membership = membership,
       communities = length(fit),
@@ -244,9 +327,20 @@ as_adjacency_matrix <- function(graph) {
       algorithm = algorithm,
       resolution = resolution,
       source_device = graph$source_device,
-      backend = "igraph"
+      backend = "igraph",
+      source_class = class(graph)[[1L]],
+      source_provenance = cuda_provenance(graph),
+      upstream_provenance = graph$source_provenance,
+      parameters = c(
+        list(resolution = resolution),
+        parameters
+      )
     ),
     class = "cuda_communities"
+  )
+  .with_graph_provenance(
+    output,
+    list(community_detection = .graph_cpu_stage("igraph"))
   )
 }
 
@@ -311,14 +405,25 @@ cuda_leiden <- function(graph, resolution = 1, n_iterations = 2L) {
     resolution = resolution,
     n_iterations = as.integer(n_iterations)
   )
-  .community_result(fit, graph, igraph_graph, "leiden", resolution)
+  .community_result(
+    fit,
+    graph,
+    igraph_graph,
+    "leiden",
+    resolution,
+    parameters = list(n_iterations = as.integer(n_iterations))
+  )
 }
 
 #' @export
 print.cuda_graph <- function(x, ...) {
   cat(sprintf(
-    "<cuda_graph vertices=%s edges=%s weighting=%s source_device=%s backend=%s>\n",
-    x$vertices, x$edges, x$weighting, x$source_device, x$backend
+    paste0(
+      "<cuda_graph vertices=%s edges=%s weighting=%s ",
+      "source_device=%s compute=%s backend=%s>\n"
+    ),
+    x$vertices, x$edges, x$weighting, x$source_device,
+    x$compute_device, x$backend
   ))
   invisible(x)
 }
@@ -326,8 +431,11 @@ print.cuda_graph <- function(x, ...) {
 #' @export
 print.cuda_communities <- function(x, ...) {
   cat(sprintf(
-    "<cuda_communities groups=%s algorithm=%s resolution=%s backend=%s>\n",
-    x$communities, x$algorithm, x$resolution, x$backend
+    paste0(
+      "<cuda_communities groups=%s algorithm=%s resolution=%s ",
+      "compute=%s backend=%s>\n"
+    ),
+    x$communities, x$algorithm, x$resolution, x$compute_device, x$backend
   ))
   invisible(x)
 }

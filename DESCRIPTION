@@ -1,6 +1,6 @@
 Package: cudagraphR
 Title: GPU-Aware Graph Workflows for R
-Version: 0.1.2
+Version: 0.2.0
 Authors@R:
     person("Yaoxiang", "Li", email = "liyaoxiang@outlook.com",
            role = c("aut", "cre"))
@@ -15,14 +15,19 @@ BugReports: https://github.com/cudaverse/cudagraphR/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
+    cudatensr (>= 0.2.0),
     Matrix,
     methods,
     stats
 Suggests:
-    cudalearnr (>= 0.1.2),
+    cudalearnr (>= 0.2.0),
     igraph (>= 2.0.0),
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Remotes:
+    cudaverse/cudatensr,
     cudaverse/cudalearnr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0

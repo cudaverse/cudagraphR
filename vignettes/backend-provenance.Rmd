@@ -1,0 +1,201 @@
+---
+title: "Backend and provenance"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Backend and provenance}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+`cudagraphR` keeps two different histories:
+
+- **source provenance** describes how the nearest-neighbour input was
+  computed; and
+- **current compute provenance** describes graph assembly or community
+  detection performed by `cudagraphR`.
+
+These histories must not be confused. Neighbours can originate on CUDA while
+the current graph and community algorithms still run on the CPU.
+
+## A runnable CPU graph
+
+The core graph constructor accepts a neighbour list, so this example needs no
+GPU and no optional clustering package.
+
+```{r cpu-graph}
+library(cudagraphR)
+
+vertex_names <- paste0("cell_", 1:6)
+index <- matrix(
+  c(
+    2, 3,
+    1, 3,
+    1, 2,
+    5, 6,
+    4, 6,
+    4, 5
+  ),
+  nrow = 6,
+  byrow = TRUE,
+  dimnames = list(vertex_names, c("neighbor_1", "neighbor_2"))
+)
+distance <- matrix(
+  rep(c(1, 1.25), 6),
+  nrow = 6,
+  byrow = TRUE,
+  dimnames = dimnames(index)
+)
+neighbors <- list(
+  index = index,
+  distance = distance,
+  device = "cpu"
+)
+
+graph <- cuda_knn_graph(
+  neighbors,
+  weighting = "gaussian",
+  symmetrize = "mutual"
+)
+
+graph
+graph$source_device
+graph$compute_device
+cuda_provenance(graph)
+```
+
+`graph$source_device` describes the neighbour input. In contrast,
+`cuda_provenance(graph)` describes only the current `graph_assembly` stage:
+it uses the CPU and the `Matrix` backend. A plain list has no earlier
+stage-level provenance, so `graph$source_provenance` is `NULL`.
+
+## Preserve an upstream history
+
+When `cudalearnr` is installed, a `cuda_knn` result supplies its own distance
+and neighbour-selection stages. `cuda_knn_graph()` retains those stages
+separately from graph assembly.
+
+```{r upstream-provenance}
+if (requireNamespace("cudalearnr", quietly = TRUE)) {
+  set.seed(1)
+  observations <- matrix(rnorm(24 * 4), 24, 4)
+  rownames(observations) <- paste0("observation_", seq_len(nrow(observations)))
+
+  neighbors_cpu <- cudalearnr::cuda_knn(
+    observations,
+    k = 3,
+    batch_size = 8,
+    device = "cpu"
+  )
+  graph_from_knn <- cuda_knn_graph(neighbors_cpu)
+
+  graph_from_knn$source_device
+  graph_from_knn$source_provenance
+  cuda_provenance(graph_from_knn)
+}
+```
+
+The two provenance objects answer different questions:
+
+- `graph_from_knn$source_provenance` explains the upstream distance and
+  neighbour-selection work;
+- `cuda_provenance(graph_from_knn)` explains graph assembly performed now.
+
+## Community detection remains on the CPU
+
+Louvain and Leiden use the optional `igraph` package. They preserve the graph
+assembly record as source provenance, but their current
+`community_detection` stage is always CPU.
+
+```{r communities}
+if (requireNamespace("igraph", quietly = TRUE)) {
+  communities <- cuda_louvain(graph)
+
+  communities$membership
+  communities$source_device
+  communities$source_provenance
+  cuda_provenance(communities)
+}
+```
+
+For a `cuda_communities` result:
+
+- `source_device` still identifies the original neighbour source;
+- `source_provenance` is the graph-assembly stage;
+- `upstream_provenance` retains any provenance supplied by the neighbour
+  result; and
+- `cuda_provenance(communities)` reports the current CPU `igraph` stage.
+
+Changing the source device does not make graph assembly, Louvain, or Leiden
+GPU-native.
+
+## Optional CUDA source and the hardware gate
+
+The following block runs only when both a CUDA-enabled R `torch` runtime and
+`cudalearnr` are available. It requires CUDA explicitly rather than using
+`device = "auto"`, then verifies that CUDA neighbour computation is followed
+by fixed-CPU graph assembly.
+
+The cudaverse NVIDIA workflow sets `CUDAVERSE_REQUIRE_CUDA=true`. Under that
+gate, missing CUDA hardware or a missing integration dependency is an error,
+not a skipped test.
+
+```{r optional-cuda}
+require_cuda <- identical(
+  tolower(Sys.getenv("CUDAVERSE_REQUIRE_CUDA", "false")),
+  "true"
+)
+cuda_ready <- cudatensr::cuda_available()
+knn_ready <- requireNamespace("cudalearnr", quietly = TRUE)
+
+if (require_cuda && (!cuda_ready || !knn_ready)) {
+  stop(
+    "The hardware gate requires CUDA and the cudalearnr integration."
+  )
+}
+
+if (cuda_ready && knn_ready) {
+  set.seed(2)
+  cuda_input <- matrix(rnorm(32 * 4), 32, 4)
+  rownames(cuda_input) <- paste0("cuda_observation_", seq_len(nrow(cuda_input)))
+
+  neighbors_cuda <- cudalearnr::cuda_knn(
+    cuda_input,
+    k = 3,
+    batch_size = 8,
+    device = "cuda"
+  )
+  graph_cuda <- cuda_knn_graph(neighbors_cuda)
+  graph_cuda_provenance <- cuda_provenance(graph_cuda)
+
+  stopifnot(
+    identical(graph_cuda$source_device, "cuda"),
+    identical(graph_cuda$compute_device, "cpu"),
+    identical(graph_cuda_provenance$stage, "graph_assembly"),
+    identical(graph_cuda_provenance$device, "cpu")
+  )
+
+  graph_cuda$source_provenance
+  graph_cuda_provenance
+
+  if (requireNamespace("igraph", quietly = TRUE)) {
+    communities_cuda_source <- cuda_louvain(graph_cuda)
+    stopifnot(
+      identical(communities_cuda_source$compute_device, "cpu"),
+      identical(
+        cuda_provenance(communities_cuda_source)$device,
+        "cpu"
+      )
+    )
+  }
+}
+```
+
+Use `device = "cuda"` when CUDA execution is a requirement. Use
+`device = "auto"` only when a recorded CPU fallback is acceptable.

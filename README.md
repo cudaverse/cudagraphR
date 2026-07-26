@@ -12,9 +12,18 @@ community-detection interface for omics workflows.
 - Louvain and Leiden clustering through `igraph`;
 - direct composition with `cudalearnr::cuda_knn()`.
 
-Distance and neighbour computation may run on CUDA upstream. In version 0.1.2,
+Distance and neighbour computation may run on CUDA upstream. In version 0.2.0,
 graph assembly and community detection run on the CPU; the returned objects
 record both the source device and graph backend.
+
+| Result | Source provenance | Current compute provenance |
+|---|---|---|
+| `cuda_graph` | device and stages from the neighbour input | graph assembly is CPU through `Matrix` |
+| `cuda_communities` | original neighbour source plus graph-assembly provenance | Louvain or Leiden is CPU through `igraph` |
+
+The [backend and provenance article](https://cudaverse.github.io/cudagraphR/articles/backend-provenance.html)
+shows how to inspect both histories, includes a runnable CPU workflow, and
+documents the optional CUDA hardware gate.
 
 ## Installation
 

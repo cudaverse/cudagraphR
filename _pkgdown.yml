@@ -3,11 +3,18 @@ url: https://cudaverse.github.io/cudagraphR/
 template:
   bootstrap: 5
 
+articles:
+- title: Guides
+  navbar: ~
+  contents:
+  - backend-provenance
+
 reference:
 - title: Construct and inspect graphs
   contents:
   - cuda_knn_graph
   - as_adjacency_matrix
+  - cuda_provenance
 - title: Detect communities
   contents:
   - cuda_louvain
