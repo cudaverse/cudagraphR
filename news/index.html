@@ -38,7 +38,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="cudagraphr-020">cudagraphR 0.2.0<a class="anchor" aria-label="anchor" href="#cudagraphr-020"></a></h2>
-<ul><li>Graph assembly and community detection now expose the shared stage-level provenance schema and explicitly report CPU computation independently from an upstream CUDA kNN source.</li>
+<ul><li>
+<code><a href="https://cudaverse.github.io/cudatensr/reference/cuda_provenance.html" class="external-link">cuda_provenance()</a></code> now re-exports the canonical cudatensr S3 generic instead of wrapping it, so methods registered by other cudaverse packages remain available regardless of package attachment order.</li>
+<li>Graph assembly and community detection now expose the shared stage-level provenance schema and explicitly report CPU computation independently from an upstream CUDA kNN source.</li>
 <li>Graphs retain their kNN source provenance; community results retain both graph and upstream provenance.</li>
 <li>Gaussian graphs record the effective bandwidth chosen when <code>sigma = NULL</code>, and Leiden results record the effective <code>n_iterations</code>.</li>
 <li>Compatible neighbour lists now validate their optional device metadata.</li>
