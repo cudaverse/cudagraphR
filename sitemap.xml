@@ -1,6 +1,8 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://cudaverse.github.io/cudagraphR/404.html</loc></url>
 <url><loc>https://cudaverse.github.io/cudagraphR/LICENSE-text.html</loc></url>
+<url><loc>https://cudaverse.github.io/cudagraphR/articles/backend-provenance.html</loc></url>
+<url><loc>https://cudaverse.github.io/cudagraphR/articles/index.html</loc></url>
 <url><loc>https://cudaverse.github.io/cudagraphR/authors.html</loc></url>
 <url><loc>https://cudaverse.github.io/cudagraphR/index.html</loc></url>
 <url><loc>https://cudaverse.github.io/cudagraphR/news/index.html</loc></url>
@@ -8,6 +10,7 @@
 <url><loc>https://cudaverse.github.io/cudagraphR/reference/cuda_knn_graph.html</loc></url>
 <url><loc>https://cudaverse.github.io/cudagraphR/reference/cuda_leiden.html</loc></url>
 <url><loc>https://cudaverse.github.io/cudagraphR/reference/cuda_louvain.html</loc></url>
+<url><loc>https://cudaverse.github.io/cudagraphR/reference/cuda_provenance.html</loc></url>
 <url><loc>https://cudaverse.github.io/cudagraphR/reference/index.html</loc></url>
 </urlset>
 

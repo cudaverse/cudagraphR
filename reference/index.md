@@ -6,6 +6,8 @@
   : Build a sparse graph from nearest neighbours
 - [`as_adjacency_matrix()`](https://cudaverse.github.io/cudagraphR/reference/as_adjacency_matrix.md)
   : Extract a graph adjacency matrix
+- [`cuda_provenance()`](https://cudaverse.github.io/cudagraphR/reference/cuda_provenance.md)
+  : Inspect actual compute provenance
 
 ## Detect communities
 

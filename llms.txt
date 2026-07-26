@@ -14,8 +14,18 @@ community-detection interface for omics workflows.
   [`cudalearnr::cuda_knn()`](https://cudaverse.github.io/cudalearnr/reference/cuda_knn.html).
 
 Distance and neighbour computation may run on CUDA upstream. In version
-0.1.2, graph assembly and community detection run on the CPU; the
+0.2.0, graph assembly and community detection run on the CPU; the
 returned objects record both the source device and graph backend.
+
+| Result | Source provenance | Current compute provenance |
+|----|----|----|
+| `cuda_graph` | device and stages from the neighbour input | graph assembly is CPU through `Matrix` |
+| `cuda_communities` | original neighbour source plus graph-assembly provenance | Louvain or Leiden is CPU through `igraph` |
+
+The [backend and provenance
+article](https://cudaverse.github.io/cudagraphR/articles/backend-provenance.html)
+shows how to inspect both histories, includes a runnable CPU workflow,
+and documents the optional CUDA hardware gate.
 
 ## Installation
 
@@ -89,6 +99,8 @@ MIT © Yaoxiang Li
   : Build a sparse graph from nearest neighbours
 - [`as_adjacency_matrix()`](https://cudaverse.github.io/cudagraphR/reference/as_adjacency_matrix.md)
   : Extract a graph adjacency matrix
+- [`cuda_provenance()`](https://cudaverse.github.io/cudagraphR/reference/cuda_provenance.md)
+  : Inspect actual compute provenance
 
 ## Detect communities
 
@@ -97,3 +109,9 @@ MIT © Yaoxiang Li
 - [`cuda_leiden()`](https://cudaverse.github.io/cudagraphR/reference/cuda_leiden.md)
   : Cluster a graph with Leiden
 
+# Articles
+
+### Guides
+
+- [Backend and
+  provenance](https://cudaverse.github.io/cudagraphR/articles/backend-provenance.md):

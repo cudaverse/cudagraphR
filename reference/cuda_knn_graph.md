@@ -50,5 +50,5 @@ adjacency dimnames and in `vertex_names`.
 index <- matrix(c(2, 3, 1, 3, 1, 2), 3, byrow = TRUE)
 distance <- matrix(c(1, 2, 1, 1, 2, 1), 3, byrow = TRUE)
 cuda_knn_graph(list(index = index, distance = distance))
-#> <cuda_graph vertices=3 edges=3 weighting=binary source_device=unknown backend=Matrix>
+#> <cuda_graph vertices=3 edges=3 weighting=binary source_device=unknown compute=cpu backend=Matrix>
 ```

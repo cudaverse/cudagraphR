@@ -36,5 +36,5 @@ graph <- cuda_knn_graph(list(index = index, distance = distance))
 if (requireNamespace("igraph", quietly = TRUE)) {
   cuda_leiden(graph)
 }
-#> <cuda_communities groups=1 algorithm=leiden resolution=1 backend=igraph>
+#> <cuda_communities groups=1 algorithm=leiden resolution=1 compute=cpu backend=igraph>
 ```
