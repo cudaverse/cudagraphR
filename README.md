@@ -1,5 +1,11 @@
 # cudagraphR
 
+> **Archived:** This package has been incorporated into
+> [`cudaverse`](https://github.com/cudaverse/cudaverse). Install and load
+> `cudaverse`, then continue using the same graph functions. This repository
+> remains available as development history and receives no new features or
+> releases.
+
 `cudagraphR` is the graph layer of the **cudaverse**. It turns
 GPU-aware nearest-neighbour results into sparse R graphs and provides a stable
 community-detection interface for omics workflows.
